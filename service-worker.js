@@ -4,7 +4,7 @@
    - Best-effort periodic sync for daily reminder
 */
 
-const CACHE_VERSION = 'ledger-v1';
+const CACHE_VERSION = 'ledger-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
