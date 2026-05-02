@@ -1,0 +1,49 @@
+{
+  "name": "Ledger — Personal Finance",
+  "short_name": "Ledger",
+  "description": "Fast daily expense logging with monthly envelope budgets. Works offline.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7F2",
+  "theme_color": "#FAF7F2",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick add",
+      "short_name": "Add",
+      "description": "Jump straight to logging an expense",
+      "url": "./?action=add",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
+    }
+  ]
+}

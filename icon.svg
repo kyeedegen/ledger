@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Maskable safe zone is inner 80% (centered). Background fills the full square. -->
+  <rect width="512" height="512" rx="96" fill="#1F3D2E"/>
+
+  <!-- Subtle inner texture using radial highlight -->
+  <radialGradient id="glow" cx="0.5" cy="0.35" r="0.7">
+    <stop offset="0%" stop-color="#2C5340" stop-opacity="0.6"/>
+    <stop offset="100%" stop-color="#1F3D2E" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+
+  <!-- Italic serif "L" — kept inside the 80% maskable safe zone (52..460 horiz / 52..460 vert) -->
+  <text x="186" y="378"
+        font-family="'Fraunces', 'Georgia', 'Times New Roman', serif"
+        font-size="340"
+        font-style="italic"
+        font-weight="400"
+        fill="#FAF7F2"
+        letter-spacing="-8">L</text>
+
+  <!-- Brand dot accent -->
+  <circle cx="350" cy="370" r="22" fill="#FAF7F2"/>
+</svg>
