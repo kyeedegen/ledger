@@ -55,7 +55,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  padding: 0 16px 96px;
+  min-height: 100dvh;
+  padding: 0 16px;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .serif {
@@ -459,10 +462,12 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
   box-shadow: var(--shadow-lg);
   z-index: 101;
   max-height: 85vh;
+  max-height: 85dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
 .sheet.open { transform: translateY(0); }
 .sheet-handle {
@@ -595,7 +600,11 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (min-width: 720px) {
-  body { padding: 0 24px 96px; font-size: 15px; }
+  body {
+    padding: 0 24px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    font-size: 15px;
+  }
   .brand { font-size: 36px; }
   .qa-input { font-size: 24px; }
   .kpi { padding: 18px 18px 16px; }
@@ -673,7 +682,7 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
 .env-budget-cancel:hover { background: var(--bg-elev); color: var(--red); }
 
 /* ── Detail (Drill-down) Sheet ─────────────────────── */
-.detail-sheet { max-height: 92vh; }
+.detail-sheet { max-height: 92vh; max-height: 92dvh; }
 .sheet-back {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 13px;
