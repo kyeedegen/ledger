@@ -250,7 +250,15 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  /* Auto-fit: scaled by JS via --fit-scale. Default 1. */
+  transform: scale(var(--fit-scale, 1));
+  transform-origin: left center;
+}
+.kpi-value.fit-wrap { /* fallback class if scaling alone isn't enough */
+  white-space: normal;
+  word-break: break-all;
 }
 .kpi-value.neg { color: var(--red); }
 .kpi-value.ok { color: var(--accent); }
@@ -281,20 +289,51 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
   font-style: italic;
 }
 
-/* ── Categories ─────────────────────────────────────── */
+/* ── Categories (Flip Card) ─────────────────────────── */
 .envelopes {
   display: flex; flex-direction: column; gap: 8px;
+  perspective: 1400px;
 }
 .envelope {
+  position: relative;
+  cursor: pointer;
+  /* Height grows when flipped */
+  height: 88px;
+  transition: height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.envelope.flipped { height: 220px; }
+
+.env-face {
+  position: absolute;
+  inset: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 16px;
   box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s;
-  cursor: pointer;
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.15s;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
 }
-.envelope:hover { border-color: var(--border-strong); }
+.env-face-front {
+  transform: rotateY(0deg);
+  display: flex; flex-direction: column; justify-content: center;
+}
+.env-face-back {
+  transform: rotateY(180deg);
+  background: var(--bg-elev);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.envelope.flipped .env-face-front { transform: rotateY(-180deg); }
+.envelope.flipped .env-face-back { transform: rotateY(0deg); }
+
+/* Hover only on front face when not flipped */
+.envelope:not(.flipped):hover .env-face-front { border-color: var(--border-strong); }
+
 .env-top {
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 10px; margin-bottom: 8px;
@@ -327,6 +366,7 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
   transition: width 0.4s cubic-bezier(0.2, 0.6, 0.2, 1);
   background: var(--green);
 }
+.env-face-back .env-bar { background: rgba(26,24,21,0.06); }
 .env-bar-fill.warn { background: var(--amber); }
 .env-bar-fill.over { background: var(--red); }
 .env-meta {
@@ -340,6 +380,130 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
 .env-meta .pct.warn { color: var(--amber); }
 .env-meta .pct.over { color: var(--red); }
 .env-meta .pct.ok { color: var(--green); }
+
+/* ── Back Face Content ──────────────────────────────── */
+.env-back-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.env-back-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--ink-muted);
+  font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.env-back-title .stripe {
+  display: inline-block;
+  width: 3px; height: 12px;
+  border-radius: 2px;
+}
+.env-back-flip {
+  font-size: 11px;
+  color: var(--ink-muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.5);
+}
+.env-back-flip:hover { color: var(--ink); background: var(--surface); }
+.env-back-flip svg { width: 11px; height: 11px; }
+
+/* Sparkline */
+.env-spark {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 2px;
+  height: 60px;
+  padding: 4px 0 0;
+  flex-shrink: 0;
+}
+.env-spark-bar {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  position: relative;
+  transition: opacity 0.15s;
+  opacity: 0.85;
+}
+.env-spark-bar.empty {
+  background: rgba(26,24,21,0.12);
+  height: 4px !important;
+  border-radius: 50%;
+  align-self: center;
+}
+.env-spark-bar.over { background: var(--red); }
+.env-spark-bar.today {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.env-spark-axis {
+  display: flex; justify-content: space-between;
+  font-size: 9px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Stats row */
+.env-back-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-strong);
+}
+.env-back-stat {
+  text-align: left;
+}
+.env-back-stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  margin-bottom: 1px;
+  font-weight: 500;
+}
+.env-back-stat-value {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.env-back-stat-trend {
+  font-size: 10px;
+  display: inline-flex; align-items: center; gap: 2px;
+  margin-left: 3px;
+  font-family: 'Geist', sans-serif;
+  font-weight: 500;
+}
+.env-back-stat-trend.up { color: var(--red); }
+.env-back-stat-trend.down { color: var(--green); }
+.env-back-stat-trend.flat { color: var(--ink-muted); }
+
+.env-back-footer {
+  display: flex; justify-content: flex-end;
+  flex-shrink: 0;
+}
+.env-back-seeall {
+  font-size: 11px;
+  color: var(--accent);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.env-back-seeall:hover { background: var(--accent-soft); }
 
 /* ── Chart ──────────────────────────────────────────── */
 .chart-card {
@@ -717,6 +881,10 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outli
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap;
+  white-space: nowrap;
+  overflow: hidden;
+  transform: scale(var(--fit-scale, 1));
+  transform-origin: left center;
 }
 .detail-status-spent {
   font-size: 30px;
@@ -1216,6 +1384,52 @@ let editingBudget = null;       // category name being edited inline
 let detailCategory = null;      // category currently shown in drill-down
 let detailMode = 'monthly';     // 'daily' | 'monthly'
 let detailChart = null;
+let flippedEnvelope = null;     // category currently flipped to back face
+
+/* Aggregations for back-of-envelope sparkline + stats */
+function envelopeBackData(category) {
+  const today = new Date();
+  const todayISOStr = todayISO();
+
+  // Last 14 days daily totals
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const total = state.transactions
+      .filter(t => t.category === category && t.date === iso)
+      .reduce((s, t) => s + t.amount, 0);
+    days.push({ iso, total, isToday: iso === todayISOStr });
+  }
+
+  // This month vs last month
+  const thisMonth = todayISOStr.slice(0, 7);
+  const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth()+1).padStart(2,'0')}`;
+
+  const thisMonthSum = state.transactions
+    .filter(t => t.category === category && t.date.startsWith(thisMonth))
+    .reduce((s, t) => s + t.amount, 0);
+  const lastMonthSum = state.transactions
+    .filter(t => t.category === category && t.date.startsWith(lastMonth))
+    .reduce((s, t) => s + t.amount, 0);
+
+  // Avg per day for last 30 days (only days with activity)
+  const last30 = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const total = state.transactions
+      .filter(t => t.category === category && t.date === iso)
+      .reduce((s, t) => s + t.amount, 0);
+    last30.push(total);
+  }
+  const avgPerDay = last30.reduce((s, v) => s + v, 0) / 30;
+
+  return { days, thisMonthSum, lastMonthSum, avgPerDay };
+}
 
 function loadState() {
   try {
@@ -1305,6 +1519,26 @@ function fmtDateLong(iso) {
 function fmtMonthLong(yyyymm) {
   const [y, m] = yyyymm.split('-').map(Number);
   return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+/* Auto-fit text inside a container by scaling down to fit width.
+   Uses CSS transform scale via --fit-scale variable.
+   Cheap: one measurement, one variable assignment. */
+function fitText(el) {
+  if (!el) return;
+  // Reset before measuring
+  el.style.setProperty('--fit-scale', 1);
+  // Force reflow then measure
+  const parent = el.parentElement;
+  if (!parent) return;
+  // Use scrollWidth (intrinsic) vs clientWidth (visible) of parent
+  const available = parent.clientWidth;
+  if (available <= 0) return;
+  const intrinsic = el.scrollWidth;
+  if (intrinsic <= available) return;
+  // Scale down with a small safety margin
+  const scale = Math.max(0.55, (available - 2) / intrinsic);
+  el.style.setProperty('--fit-scale', scale.toFixed(3));
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1456,6 +1690,13 @@ function renderKPIs() {
   remEl.innerHTML = fmtMoneyHTML(remaining);
   remEl.classList.toggle('neg', remaining < 0);
   remEl.classList.toggle('ok', remaining > 0);
+
+  // Auto-fit big numbers — defer to next frame so layout is settled
+  requestAnimationFrame(() => {
+    fitText(document.getElementById('kpi-spent'));
+    fitText(document.getElementById('kpi-budget'));
+    fitText(document.getElementById('kpi-remaining'));
+  });
 }
 
 function renderEnvelopes() {
@@ -1475,6 +1716,7 @@ function renderEnvelopes() {
     const barCls = pct > 100 ? 'over' : pct >= 80 ? 'warn' : '';
 
     const isEditing = editingBudget === cat;
+    const isFlipped = flippedEnvelope === cat;
 
     const rightHTML = isEditing
       ? `<div class="env-budget-edit">
@@ -1496,42 +1738,126 @@ function renderEnvelopes() {
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
          </button>`;
 
-    const el = document.createElement('div');
-    el.className = 'envelope';
-    el.dataset.cat = cat;
-    el.innerHTML = `
-      <div class="env-top">
-        <div class="env-name">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CAT_COLORS[cat]};margin-right:7px;vertical-align:1px;"></span>
-          ${cat}
+    // FRONT FACE: existing envelope content
+    const frontHTML = `
+      <div class="env-face env-face-front">
+        <div class="env-top">
+          <div class="env-name">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CAT_COLORS[cat]};margin-right:7px;vertical-align:1px;"></span>
+            ${cat}
+          </div>
+          <div class="env-right">${rightHTML}</div>
         </div>
-        <div class="env-right">${rightHTML}</div>
-      </div>
-      <div class="env-bar">
-        <div class="env-bar-fill ${barCls}" style="width:${Math.min(pct, 100)}%"></div>
-      </div>
-      <div class="env-meta">
-        <span class="pct ${cls}">${pct.toFixed(0)}%</span>
-        <span>${remaining >= 0 ? state.currency + fmtMoney(remaining) + ' left' : state.currency + fmtMoney(-remaining) + ' over'}</span>
+        <div class="env-bar">
+          <div class="env-bar-fill ${barCls}" style="width:${Math.min(pct, 100)}%"></div>
+        </div>
+        <div class="env-meta">
+          <span class="pct ${cls}">${pct.toFixed(0)}%</span>
+          <span>${remaining >= 0 ? state.currency + fmtMoney(remaining) + ' left' : state.currency + fmtMoney(-remaining) + ' over'}</span>
+        </div>
       </div>
     `;
 
+    // BACK FACE: build only when flipped (skip work otherwise for perf)
+    let backHTML;
+    if (isFlipped) {
+      const data = envelopeBackData(cat);
+      const maxDay = Math.max(...data.days.map(d => d.total), 1);
+      const dailyBudget = budget / 30; // approximate daily allowance
+
+      const sparkBars = data.days.map(d => {
+        if (d.total === 0) {
+          return `<div class="env-spark-bar empty" title="${d.iso} · no spending"></div>`;
+        }
+        const heightPct = (d.total / maxDay) * 100;
+        const overDay = dailyBudget > 0 && d.total > dailyBudget * 2;
+        return `<div class="env-spark-bar ${overDay ? 'over' : ''} ${d.isToday ? 'today' : ''}" style="height:${heightPct}%; background:${overDay ? '' : CAT_COLORS[cat]};" title="${d.iso} · ${state.currency}${fmtMoney(d.total)}"></div>`;
+      }).join('');
+
+      const firstLabel = data.days[0].iso.slice(5).replace('-', '/');
+      const lastLabel = 'today';
+
+      // Trend vs last month
+      let trendHTML = '';
+      if (data.lastMonthSum > 0) {
+        const change = ((data.thisMonthSum - data.lastMonthSum) / data.lastMonthSum) * 100;
+        if (Math.abs(change) < 5) {
+          trendHTML = `<span class="env-back-stat-trend flat">~</span>`;
+        } else if (change > 0) {
+          trendHTML = `<span class="env-back-stat-trend up">↑${change.toFixed(0)}%</span>`;
+        } else {
+          trendHTML = `<span class="env-back-stat-trend down">↓${Math.abs(change).toFixed(0)}%</span>`;
+        }
+      } else if (data.thisMonthSum > 0) {
+        trendHTML = `<span class="env-back-stat-trend up">new</span>`;
+      }
+
+      backHTML = `
+        <div class="env-face env-face-back">
+          <div class="env-back-header">
+            <span class="env-back-title">
+              <span class="stripe" style="background:${CAT_COLORS[cat]}"></span>
+              ${cat} · last 14 days
+            </span>
+            <button class="env-back-flip" data-flip-back="${escapeHTML(cat)}" aria-label="Flip back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="env-spark">${sparkBars}</div>
+          <div class="env-spark-axis">
+            <span>${firstLabel}</span>
+            <span>${lastLabel}</span>
+          </div>
+          <div class="env-back-stats">
+            <div class="env-back-stat">
+              <div class="env-back-stat-label">Avg / day</div>
+              <div class="env-back-stat-value">${state.currency}${fmtMoney(Math.round(data.avgPerDay))}</div>
+            </div>
+            <div class="env-back-stat">
+              <div class="env-back-stat-label">This month</div>
+              <div class="env-back-stat-value">${state.currency}${fmtMoney(data.thisMonthSum)}${trendHTML}</div>
+            </div>
+            <div class="env-back-stat">
+              <div class="env-back-stat-label">Last month</div>
+              <div class="env-back-stat-value">${state.currency}${fmtMoney(data.lastMonthSum)}</div>
+            </div>
+          </div>
+          <div class="env-back-footer">
+            <button class="env-back-seeall" data-seeall="${escapeHTML(cat)}">See all transactions →</button>
+          </div>
+        </div>
+      `;
+    } else {
+      backHTML = '<div class="env-face env-face-back"></div>'; // placeholder, no work
+    }
+
+    const el = document.createElement('div');
+    el.className = 'envelope' + (isFlipped ? ' flipped' : '');
+    el.dataset.cat = cat;
+    el.innerHTML = frontHTML + backHTML;
+
     if (!isEditing) {
-      el.addEventListener('click', () => openDetail(cat));
+      el.addEventListener('click', (e) => {
+        // Ignore clicks on inner buttons (handled separately below)
+        if (e.target.closest('.env-edit-btn, .env-budget-edit, .env-back-flip, .env-back-seeall')) return;
+        toggleFlipEnvelope(cat);
+      });
     }
 
     wrap.appendChild(el);
   });
 
-  // Bind pencil edit clicks
+  // Pencil edit clicks (front face)
   wrap.querySelectorAll('.env-edit-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      // If currently flipped, flip back first
+      if (flippedEnvelope) flippedEnvelope = null;
       startEditBudget(btn.dataset.cat);
     });
   });
 
-  // Bind inline budget edit handlers
+  // Inline budget edit handlers
   wrap.querySelectorAll('.env-budget-input').forEach(inp => {
     inp.addEventListener('keydown', (e) => {
       e.stopPropagation();
@@ -1539,7 +1865,6 @@ function renderEnvelopes() {
       if (e.key === 'Escape') { e.preventDefault(); cancelEditBudget(); }
     });
     inp.addEventListener('click', e => e.stopPropagation());
-    // Auto-focus and select on render
     setTimeout(() => { inp.focus(); inp.select(); }, 10);
   });
   wrap.querySelectorAll('.env-budget-save').forEach(btn => {
@@ -1556,6 +1881,35 @@ function renderEnvelopes() {
       cancelEditBudget();
     });
   });
+
+  // Back-face flip-back button
+  wrap.querySelectorAll('[data-flip-back]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      flippedEnvelope = null;
+      renderEnvelopes();
+    });
+  });
+
+  // Back-face "See all transactions"
+  wrap.querySelectorAll('[data-seeall]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cat = btn.getAttribute('data-seeall');
+      flippedEnvelope = null;
+      openDetail(cat);
+    });
+  });
+}
+
+function toggleFlipEnvelope(cat) {
+  if (editingBudget) return;
+  if (flippedEnvelope === cat) {
+    flippedEnvelope = null;
+  } else {
+    flippedEnvelope = cat;
+  }
+  renderEnvelopes();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1608,21 +1962,36 @@ function renderChart() {
   }
 
   const wrap = document.getElementById('chart-wrap');
-  const canvas = document.getElementById('pie-chart');
 
+  // Empty state
   if (values.length === 0) {
     if (pieChart) { pieChart.destroy(); pieChart = null; }
     wrap.innerHTML = '<div class="chart-empty">No spending in this period yet</div>';
     return;
   }
 
-  // Make sure the canvas exists (we may have replaced it with empty state)
+  // Make sure canvas exists
   if (!document.getElementById('pie-chart')) {
     wrap.innerHTML = '<canvas id="pie-chart"></canvas>';
   }
-  const ctx = document.getElementById('pie-chart').getContext('2d');
 
-  if (pieChart) pieChart.destroy();
+  // FAST PATH: chart exists → just update its data (no destroy/recreate)
+  if (pieChart) {
+    pieChart.data.labels = labels;
+    pieChart.data.datasets[0].data = values;
+    pieChart.data.datasets[0].backgroundColor = colors;
+    // Keep tooltip callback closure fresh (currency/values capture)
+    pieChart.options.plugins.tooltip.callbacks.label = function(ctx) {
+      const total = values.reduce((a, b) => a + b, 0);
+      const pct = ((ctx.parsed / total) * 100).toFixed(1);
+      return `  ${state.currency}${fmtMoney(ctx.parsed)}  (${pct}%)`;
+    };
+    pieChart.update('none'); // 'none' = no animation = instant
+    return;
+  }
+
+  // SLOW PATH: build chart from scratch (only on first render or after empty state)
+  const ctx = document.getElementById('pie-chart').getContext('2d');
   pieChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -1667,7 +2036,7 @@ function renderChart() {
           }
         }
       },
-      animation: { duration: 400 }
+      animation: { duration: 250 }
     }
   });
 }
@@ -1762,27 +2131,32 @@ function addTransaction() {
   };
 
   state.transactions.push(tx);
-  saveState();
 
-  // Reset
+  // INSTANT-FEEL: clear UI synchronously so user sees immediate response
   input.value = '';
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active', 'detected'));
   document.getElementById('qa-hint').textContent = 'Type amount + category. Tap a chip to file faster.';
   document.getElementById('qa-hint').className = 'qa-hint';
+  updateSubmitState();
 
   showToast(`Added ${state.currency}${fmtMoney(tx.amount)} to ${tx.category}`);
-  render();
-  // Keep focus on mobile for rapid entry
-  // input.focus();  // commented to prevent keyboard popping unexpectedly
+
+  // Defer the heavier work (save + render) to the next frame so the UI clear paints first
+  requestAnimationFrame(() => {
+    saveState();
+    render();
+  });
 }
 
 function deleteTransaction(id) {
   const tx = state.transactions.find(t => t.id === id);
   if (!tx) return;
   state.transactions = state.transactions.filter(t => t.id !== id);
-  saveState();
   showToast(`Removed ${state.currency}${fmtMoney(tx.amount)} ${tx.category}`);
-  render();
+  requestAnimationFrame(() => {
+    saveState();
+    render();
+  });
 }
 
 function onChipTap(cat) {
@@ -1968,6 +2342,11 @@ function renderDetailStatus() {
       const env = document.querySelector(`.envelope[data-cat="${c}"]`);
       if (env) env.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 320);
+  });
+
+  // Auto-fit the detail status amount
+  requestAnimationFrame(() => {
+    fitText(document.querySelector('#detail-status .detail-status-amount'));
   });
 }
 
@@ -2678,6 +3057,18 @@ document.addEventListener('DOMContentLoaded', () => {
       checkReminder();
       // If a new day started while away, the dismissedToday will no longer match
     }
+  });
+
+  // Re-fit auto-sized text on resize / orientation change (debounced)
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      fitText(document.getElementById('kpi-spent'));
+      fitText(document.getElementById('kpi-budget'));
+      fitText(document.getElementById('kpi-remaining'));
+      fitText(document.querySelector('#detail-status .detail-status-amount'));
+    }, 150);
   });
 
   // Re-check around midnight: re-render to roll filters, dates, and reminder
